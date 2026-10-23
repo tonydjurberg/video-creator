@@ -7,6 +7,9 @@ on:
         description: "Published HTTPS URL for AI Commercial Studio"
         required: true
         type: string
+  push:
+    paths:
+      - app-url.json
 
 permissions:
   contents: read
@@ -24,9 +27,12 @@ jobs:
       - name: Configure published studio URL
         shell: pwsh
         env:
-          APP_URL: ${{ inputs.app_url }}
+          APP_URL_INPUT: ${{ inputs.app_url }}
         run: |
-          if (-not ($env:APP_URL -match '^https://')) { throw "app_url must start with https://" }
+          $url = $env:APP_URL_INPUT
+          if (-not $url) { $url = (Get-Content app-url.json -Raw | ConvertFrom-Json).url }
+          if (-not ($url -match '^https://')) { throw "app_url must start with https://" }
+          $env:APP_URL = $url
           node -e "require('fs').writeFileSync('app-url.json', JSON.stringify({url: process.env.APP_URL}, null, 2))"
       - name: Install dependencies
         run: npm install
