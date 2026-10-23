@@ -1,0 +1,42 @@
+name: Build Windows installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: "Published HTTPS URL for AI Commercial Studio"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Configure published studio URL
+        shell: pwsh
+        run: |
+          $url = "${{ inputs.app_url }}"
+          if (-not ($url -match '^https://')) { throw "app_url must start with https://" }
+          $config = @{ url = $url } | ConvertTo-Json
+          Set-Content -Path app-url.json -Value $config -Encoding utf8
+      - name: Install dependencies
+        run: npm install
+      - name: Build Windows installer
+        run: npm run dist
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-Commercial-Studio-Windows-Installer
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 14
