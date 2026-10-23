@@ -21,14 +21,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - name: Configure published studio URL
         shell: pwsh
+        env:
+          APP_URL: ${{ inputs.app_url }}
         run: |
-          $url = "${{ inputs.app_url }}"
-          if (-not ($url -match '^https://')) { throw "app_url must start with https://" }
-          $config = @{ url = $url } | ConvertTo-Json
-          Set-Content -Path app-url.json -Value $config -Encoding utf8
+          if (-not ($env:APP_URL -match '^https://')) { throw "app_url must start with https://" }
+          node -e "require('fs').writeFileSync('app-url.json', JSON.stringify({url: process.env.APP_URL}, null, 2))"
       - name: Install dependencies
         run: npm install
       - name: Build Windows installer
