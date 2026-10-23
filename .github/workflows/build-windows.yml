@@ -10,6 +10,8 @@ on:
   push:
     paths:
       - app-url.json
+      - package.json
+      - .github/workflows/build-windows.yml
 
 permissions:
   contents: read
